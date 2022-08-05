@@ -10,5 +10,6 @@ module.exports = {
     logged_out: 'Logged Out!',
     no_token_provided: 'No token provided!',
     unAuthorized: 'Un Authorized!',
-    invalid_token: 'Invalid / Expired Token'
+    invalid_token: 'Invalid / Expired Token',
+    access_denied: 'Access Denied!',
 }

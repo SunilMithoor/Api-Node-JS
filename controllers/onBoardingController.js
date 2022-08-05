@@ -40,7 +40,7 @@ const addUser = async (req, res) => {
         const user = await OnBoarding.create(info)
             .then(data => {
                 if (data) {
-                    const token = jwt.sign({ id: data.id }, process.env.JWT_SECRET_KEY, {
+                    const token = jwt.sign({ user_id: data.user_id, user_name: data.user_name }, process.env.JWT_SECRET_KEY, {
                         expiresIn: process.env.JWT_EXPIRE,
                         algorithm: process.env.JWT_ALGORITHM
                     })
@@ -85,9 +85,8 @@ const getAllUsers = async (req, res) => {
 // 3. get users by id
 
 const getUserById = async (req, res) => {
-    console.log("getUserById request :: ", req.params)
-    const id = req.params.id;
-    let users = await OnBoarding.findOne({ where: { user_id: id } })
+    console.log("getUserById request :: ", req.user_id)
+    let users = await OnBoarding.findOne({ where: { user_id: req.user_id } })
         .then(data => {
             if (data) {
                 return res.status(serverCode.ok).send(
@@ -106,16 +105,13 @@ const getUserById = async (req, res) => {
                 apiResponse.serverErrorJsonObject(res.statusCode, message.server_error)
             );
         });
-
 }
 
 
 // 4. delete user
 const deleteUser = async (req, res) => {
-    console.log("deleteUser request :: ", req.params)
-    const id = req.params.id;
-
-    let users = await OnBoarding.destroy({ where: { user_id: id } })
+    console.log("deleteUser request :: ", req.user_id)
+    let users = await OnBoarding.destroy({ where: { user_id: req.user_id } })
         .then(data => {
             if (data) {
                 return res.status(serverCode.ok).send(
@@ -148,7 +144,7 @@ const updateUser = async (req, res) => {
         fcm_token: req.body.fcm_token,
         date_of_birth: req.body.date_of_birth ? req.body.date_of_birth : null
     }
-    const users = await OnBoarding.updateUser({ where: { user_id: id } })
+    let users = await OnBoarding.updateUser({ where: { user_id: id } })
         .then(data => {
             if (data) {
                 return res.status(serverCode.ok).send(
@@ -178,23 +174,24 @@ const loginUser = async (req, res) => {
             user_name: req.body.user_name,
             password: req.body.password
         }
-        const user = await OnBoarding.findOne({ where: { user_name: req.body.user_name, }, });
+        const user = await OnBoarding.findOne({ where: { user_name: req.body.user_name }, });
         if (!user) {
             return res.status(serverCode.notFound).send(
                 apiResponse.failureJsonObject(res.statusCode, false, message.user_not_found)
             );
         }
+        console.log("user :: ", user)
         const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
         if (!passwordIsValid) {
             return res.status(serverCode.unAuthorized).send(
                 apiResponse.failureJsonObject(res.statusCode, false, message.invalid_password)
             );
         }
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
+        const token = jwt.sign({ user_id: user.user_id, user_name: user.user_name }, process.env.JWT_SECRET_KEY, {
             expiresIn: process.env.JWT_EXPIRE,
-            algorithm :process.env.JWT_ALGORITHM
+            algorithm: process.env.JWT_ALGORITHM
         })
-        req.session.token = token;
+        // req.session.token = token;
         console.log("token :: ", token)
         // var data = {
         //     user_data: user,
@@ -217,7 +214,7 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
     console.log("logoutUser request :: ", req.body)
     try {
-        req.session = null;
+        // req.session = null;
         return res.status(serverCode.ok).send(
             apiResponse.successJsonObject(res.statusCode, true, message.logged_out, null)
         )
@@ -231,12 +228,11 @@ const logoutUser = async (req, res) => {
 }
 
 
-// 3. get users by id
+// 8. get user data
 
 const getUserData = async (req, res) => {
     console.log("getUserData request :: ", req.params)
-    const id = req.params.id;
-    let users = await OnBoarding.findOne({ where: { user_id: id } })
+    await OnBoarding.findOne({ where: { user_id: req.user_id } })
         .then(data => {
             if (data) {
                 return res.status(serverCode.ok).send(
@@ -255,10 +251,7 @@ const getUserData = async (req, res) => {
                 apiResponse.serverErrorJsonObject(res.statusCode, message.server_error)
             );
         });
-
 }
-
-
 
 module.exports = {
     addUser,
@@ -267,5 +260,6 @@ module.exports = {
     deleteUser,
     updateUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    getUserData
 }
