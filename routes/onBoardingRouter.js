@@ -5,21 +5,19 @@ const authJwt = require('../middleware/authJwt.js');
 const router = require('express').Router()
 
 
-
-
-
 // use routers
-router.post('/addUser', userController.addUser)
 
-router.get('/getAllUsers', userController.getAllUsers)
+router.post('/addUser', userController.addUser);
 
-router.delete("/:id", userController.deleteUser);
+router.post('/loginUser', userController.loginUser);
 
-router.get('/:id', authJwt.verifyToken,userController.getUserById)
+router.get('/getAllUsers', authJwt.verifyToken, userController.getAllUsers);
 
-router.post('/loginUser', userController.loginUser)
+router.delete('/deleteUser',authJwt.verifyToken, userController.deleteUser);
 
-router.get('/logoutUser', userController.logoutUser)
+router.get('/logoutUser', authJwt.verifyToken, userController.logoutUser);
+
+router.get('/getUserData', authJwt.verifyToken, userController.getUserData);
 
 
 module.exports = router
